@@ -25,6 +25,16 @@ SOFTWARE.
 #include "ImGuiFileDialog.h"
 #include "imgui.h"
 
+#define IGFD_FILE_PROPERTIES
+
+#ifdef IGFD_FILE_PROPERTIES
+#include <time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <stdio.h>
+#include <errno.h>
+#endif
+
 #ifdef WIN32
 #include <dirent.h>
 #define PATH_SEP '\\'
@@ -1206,8 +1216,9 @@ namespace igfd
 
 					FileInfoStruct infos;
 
+					infos.filePath = path;
 					infos.fileName = ent->d_name;
-					if (("." != infos.fileName)/* && (".." != infos.fileName)*/)
+					if (("." != infos.fileName))
 					{
 						switch (ent->d_type)
 						{
