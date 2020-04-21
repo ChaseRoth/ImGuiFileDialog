@@ -2,8 +2,6 @@ name: Osx
 
 on:
   push:
-    branches:
-    - master
 
 jobs:
   build_Osx:
