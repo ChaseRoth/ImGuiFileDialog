@@ -2,8 +2,6 @@ name: Win
 
 on:
   push:
-    branches:
-    - master
 
 jobs:
   build_Win_2016:
