@@ -47,6 +47,8 @@ SOFTWARE.
 #include CUSTOM_IMGUIFILEDIALOG_CONFIG
 #endif
 	
+#define IGFD_FILE_PROPERTIES
+
 namespace igfd
 {
 	#define MAX_FILE_DIALOG_NAME_BUFFER 1024
@@ -59,6 +61,11 @@ namespace igfd
 		std::string filePath;
 		std::string fileName;
 		std::string ext;
+
+#ifdef IGFD_FILE_PROPERTIES
+		size_t fileSize = 0;
+		std::string fileModifDate;
+#endif
 	};
 
 	class ImGuiFileDialog
@@ -169,6 +176,9 @@ namespace igfd
 		void CheckFilter();
 
 		void SetPath(const std::string& vPath);
+#ifdef IGFD_FILE_PROPERTIES
+		void FillInfos(FileInfoStruct *vFileInfoStruct);
+#endif
 		void ScanDir(const std::string& vPath);
 		void SetCurrentDir(const std::string& vPath);
 		bool CreateDir(const std::string& vPath);

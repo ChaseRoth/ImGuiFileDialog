@@ -25,8 +25,6 @@ SOFTWARE.
 #include "ImGuiFileDialog.h"
 #include "imgui.h"
 
-#define IGFD_FILE_PROPERTIES
-
 #ifdef IGFD_FILE_PROPERTIES
 #include <time.h>
 #include <sys/types.h>
@@ -712,8 +710,18 @@ namespace igfd
 
 				ImGui::BeginChild("##FileDialog_FileList", size);
 
+#ifdef IGFD_FILE_PROPERTIES
+				static ImGuiTableFlags flags = ImGuiTableFlags_SizingPolicyFixedX | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
+				if (ImGui::BeginTable("##fileTable", 3, flags, ImVec2(0, ImGui::GetTextLineHeightWithSpacing() * 6)))
+				{
+					ImGui::TableSetupColumn("File Name", ImGuiTableColumnFlags_WidthStretch);
+					ImGui::TableSetupColumn("size (b)", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+					ImGui::TableSetupColumn("date", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_PreferSortAscending);
+					ImGui::TableAutoHeaders();
+#endif
 				for (auto & it : m_FileList)
 				{
+
 					const FileInfoStruct& infos = it;
 
 					bool show = true;
@@ -740,26 +748,48 @@ namespace igfd
 						bool selected = false;
 						if (m_SelectedFileNames.find(infos.fileName) != m_SelectedFileNames.end()) // found
 							selected = true;
-
-						if (ImGui::Selectable(str.c_str(), selected))
+#ifdef IGFD_FILE_PROPERTIES
+						ImGui::TableNextRow();
+						for(int column = 0; column < 3; column++)
 						{
-							if (infos.type == 'd')
+							ImGui::TableSetColumnIndex(column);
+							if (column == 0)
 							{
-								pathClick = SelectDirectory(infos);
+#endif
+								if (ImGui::Selectable(str.c_str(), selected))
+								{
+									if (infos.type == 'd')
+									{
+										pathClick = SelectDirectory(infos);
+									}
+									else
+									{
+										SelectFileName(infos);
+									}
+									if (showColor)
+										ImGui::PopStyleColor();
+									break;
+								}
+#ifdef IGFD_FILE_PROPERTIES
 							}
-							else
+							else if (column == 1 && infos.type != 'd')
 							{
-								SelectFileName(infos);
+								ImGui::Text("%i", infos.fileSize);
 							}
-							if (showColor)
-								ImGui::PopStyleColor();
-							break;
+							else if (column == 2)
+							{
+								ImGui::Text("%s", infos.fileModifDate.c_str());
+							}
 						}
-
+#endif
 						if (showColor)
 							ImGui::PopStyleColor();
 					}
 				}
+#ifdef IGFD_FILE_PROPERTIES
+					ImGui::EndTable();
+				}
+#endif
 
 				// changement de repertoire
 				if (pathClick)
@@ -1175,6 +1205,53 @@ namespace igfd
 		ScanDir(m_CurrentPath);
 	}
 
+#ifdef IGFD_FILE_PROPERTIES
+	void ImGuiFileDialog::FillInfos(FileInfoStruct *vFileInfoStruct)
+	{
+		if (vFileInfoStruct && vFileInfoStruct->fileName != "..")
+		{
+			// _stat struct :
+			//dev_t     st_dev;     /* ID of device containing file */
+			//ino_t     st_ino;     /* inode number */
+			//mode_t    st_mode;    /* protection */
+			//nlink_t   st_nlink;   /* number of hard links */
+			//uid_t     st_uid;     /* user ID of owner */
+			//gid_t     st_gid;     /* group ID of owner */
+			//dev_t     st_rdev;    /* device ID (if special file) */
+			//off_t     st_size;    /* total size, in bytes */
+			//blksize_t st_blksize; /* blocksize for file system I/O */
+			//blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
+			//time_t    st_atime;   /* time of last access */
+			//time_t    st_mtime;   /* time of last modification */
+			//time_t    st_ctime;   /* time of last status change */
+
+			std::string fpn;
+
+			if (vFileInfoStruct->type == 'f') // file
+				fpn = vFileInfoStruct->filePath + PATH_SEP + vFileInfoStruct->fileName;
+			else if (vFileInfoStruct->type == 'l') // link
+				fpn = vFileInfoStruct->filePath + PATH_SEP + vFileInfoStruct->fileName;
+			else if (vFileInfoStruct->type == 'd') // directory
+				fpn = vFileInfoStruct->filePath + PATH_SEP + vFileInfoStruct->fileName;
+
+			struct _stat statInfos;
+			char timebuf[100];
+			int result = _stat(fpn.c_str(), &statInfos);
+			if (!result)
+			{
+				if (vFileInfoStruct->type != 'd')
+					vFileInfoStruct->fileSize = statInfos.st_size;
+
+				size_t len = strftime(timebuf, 99, "%F", localtime(&statInfos.st_mtime));
+				if (len)
+				{
+					vFileInfoStruct->fileModifDate = std::string(timebuf, len);
+				}
+			}
+		}
+	}
+#endif
+
 	void ImGuiFileDialog::ScanDir(const std::string& vPath)
 	{
 		struct dirent **files = nullptr;
@@ -1222,9 +1299,12 @@ namespace igfd
 					{
 						switch (ent->d_type)
 						{
-						case DT_REG: infos.type = 'f'; break;
-						case DT_DIR: infos.type = 'd'; break;
-						case DT_LNK: infos.type = 'l'; break;
+						case DT_REG: 
+							infos.type = 'f'; break;
+						case DT_DIR: 
+							infos.type = 'd'; break;
+						case DT_LNK: 
+							infos.type = 'l'; break;
 						}
 
 						if (infos.type == 'f')
@@ -1236,6 +1316,9 @@ namespace igfd
 							}
 						}
 
+#ifdef IGFD_FILE_PROPERTIES
+						FillInfos(&infos);
+#endif
 						m_FileList.push_back(infos);
 					}
 				}

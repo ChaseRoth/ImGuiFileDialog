@@ -2,14 +2,14 @@
 // If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
 
-#include "imgui.h"
+#include <imgui.h>
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
-#include "imgui_internal.h"
+#include <imgui_internal.h>
 
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include "3rdparty/imgui/examples/imgui_impl_glfw.h"
+#include "3rdparty/imgui/examples/imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <string>
 
@@ -120,8 +120,8 @@ int main(int, char**)
     ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
