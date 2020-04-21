@@ -722,7 +722,6 @@ namespace igfd
 					ImGui::TableSetupColumn("date", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
 					ImGui::TableAutoHeaders();
 #endif
-				bool quitLoop = false;
 				for (auto & it : m_FileList)
 				{
 					const FileInfoStruct& infos = it;
@@ -753,40 +752,30 @@ namespace igfd
 							selected = true;
 #ifdef IGFD_FILE_PROPERTIES
 						ImGui::TableNextRow();
-						for(int column = 0; column < 3; column++)
-						{
-							ImGui::TableSetColumnIndex(column);
-							if (column == 0)
-							{
+						ImGui::TableSetColumnIndex(0); // first column
 #endif
-								if (ImGui::Selectable(str.c_str(), selected))
-								{
-									if (infos.type == 'd')
-									{
-										pathClick = SelectDirectory(infos);
-									}
-									else
-									{
-										SelectFileName(infos);
-									}
-									if (showColor)
-										ImGui::PopStyleColor();
-                                    quitLoop = true;
-									break;
-								}
-#ifdef IGFD_FILE_PROPERTIES
-							}
-							else if (column == 1 && infos.type != 'd')
+						if (ImGui::Selectable(str.c_str(), selected))
+						{
+							if (infos.type == 'd')
 							{
-								ImGui::Text("%i", infos.fileSize);
+								pathClick = SelectDirectory(infos);
 							}
-							else if (column == 2)
+							else
 							{
-								ImGui::Text("%s", infos.fileModifDate.c_str());
+								SelectFileName(infos);
 							}
+							if (showColor)
+								ImGui::PopStyleColor();
+							break;
 						}
-                        if (quitLoop)
-                            break;
+#ifdef IGFD_FILE_PROPERTIES
+						ImGui::TableSetColumnIndex(1); // second column
+						if (infos.type != 'd')
+						{
+							ImGui::Text("%i", infos.fileSize);
+						}
+						ImGui::TableSetColumnIndex(2); // third column
+						ImGui::Text("%s", infos.fileModifDate.c_str());
 #endif
 						if (showColor)
 							ImGui::PopStyleColor();
