@@ -63,7 +63,7 @@ namespace igfd
 		std::string ext;
 
 #ifdef IGFD_FILE_PROPERTIES
-		size_t fileSize = 0;
+		int fileSize = 0;
 		std::string fileModifDate;
 #endif
 	};

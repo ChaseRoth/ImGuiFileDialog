@@ -31,6 +31,9 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <stdio.h>
 #include <errno.h>
+#ifdef WIN32
+#define stat _stat
+#endif
 #endif
 
 #ifdef WIN32
@@ -716,12 +719,12 @@ namespace igfd
 				{
 					ImGui::TableSetupColumn("File Name", ImGuiTableColumnFlags_WidthStretch);
 					ImGui::TableSetupColumn("size (b)", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
-					ImGui::TableSetupColumn("date", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_PreferSortAscending);
+					ImGui::TableSetupColumn("date", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
 					ImGui::TableAutoHeaders();
 #endif
+				bool quitLoop = false;
 				for (auto & it : m_FileList)
 				{
-
 					const FileInfoStruct& infos = it;
 
 					bool show = true;
@@ -768,6 +771,7 @@ namespace igfd
 									}
 									if (showColor)
 										ImGui::PopStyleColor();
+                                    quitLoop = true;
 									break;
 								}
 #ifdef IGFD_FILE_PROPERTIES
@@ -781,6 +785,8 @@ namespace igfd
 								ImGui::Text("%s", infos.fileModifDate.c_str());
 							}
 						}
+                        if (quitLoop)
+                            break;
 #endif
 						if (showColor)
 							ImGui::PopStyleColor();
@@ -1234,9 +1240,9 @@ namespace igfd
 			else if (vFileInfoStruct->type == 'd') // directory
 				fpn = vFileInfoStruct->filePath + PATH_SEP + vFileInfoStruct->fileName;
 
-			struct _stat statInfos;
+			struct stat statInfos;
 			char timebuf[100];
-			int result = _stat(fpn.c_str(), &statInfos);
+			int result = stat(fpn.c_str(), &statInfos);
 			if (!result)
 			{
 				if (vFileInfoStruct->type != 'd')
