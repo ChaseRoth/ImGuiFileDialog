@@ -722,9 +722,9 @@ namespace igfd
 					ImGuiTableFlags_NoHostExtendY | ImGuiTableFlags_ScrollFreezeTopRow;
 				if (ImGui::BeginTable("##fileTable", 3, flags, size))
 				{
-					ImGui::TableSetupColumn("File Name", ImGuiTableColumnFlags_WidthStretch);
-					ImGui::TableSetupColumn("size (b)", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
-					ImGui::TableSetupColumn("date", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+					ImGui::TableSetupColumn("File name", ImGuiTableColumnFlags_WidthStretch);
+					ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+					ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
 					ImGui::TableAutoHeaders();
 #endif
 				for (auto & it : m_FileList)
