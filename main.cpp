@@ -2,14 +2,14 @@
 // If you are new to dear imgui, see examples/README.txt and documentation at the top of imgui.cpp.
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
 
-#include <imgui.h>
+#include "imgui.h"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif
-#include <imgui_internal.h>
+#include "imgui_internal.h"
 
-#include "3rdparty/imgui/examples/imgui_impl_glfw.h"
 #include "3rdparty/imgui/examples/imgui_impl_opengl3.h"
+#include "3rdparty/imgui/examples/imgui_impl_glfw.h"
 #include <stdio.h>
 #include <string>
 
@@ -120,8 +120,8 @@ int main(int, char**)
     ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer bindings
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init(glsl_version);
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Load Fonts
     // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
@@ -149,11 +149,12 @@ int main(int, char**)
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	igfd::ImGuiFileDialog::Instance()->SetFilterColor(".cpp", ImVec4(1,1,0,0.5));
-	igfd::ImGuiFileDialog::Instance()->SetFilterColor(".h", ImVec4(0,1,0,0.5));
-	igfd::ImGuiFileDialog::Instance()->SetFilterColor(".hpp", ImVec4(0,0,1,0.5));
-	igfd::ImGuiFileDialog::Instance()->SetFilterColor(".md", ImVec4(1,0,1,0.5));
-	igfd::ImGuiFileDialog::Instance()->SetFilterColor(".png", ImVec4(0,1,1,0.5));
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".cpp", ImVec4(1.0f, 1.0f, 0.0f, 0.9f));
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".h", ImVec4(0.0f, 1.0f, 0.0f, 0.9f));
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".hpp", ImVec4(0.0f, 0.0f, 1.0f, 0.9f));
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".md", ImVec4(1.0f, 0.0f, 1.0f, 0.9f));
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".png", ImVec4(0.0f, 1.0f, 1.0f, 0.9f), ICON_IMFDLG_FILE_TYPE_PIC); // add an icon for the filter type
+	igfd::ImGuiFileDialog::Instance()->SetFilterInfos(".gif", ImVec4(0.0f, 1.0f, 0.5f, 0.9f), "[GIF]"); // add an text for a filter type
 
     // Main loop
     while (!glfwWindowShouldClose(window))
@@ -189,7 +190,7 @@ int main(int, char**)
             ImGui::Checkbox("Another Window", &show_another_window);
 			ImGui::Separator();
 
-			ImGui::Text("imGuiFileDialog Demo : ");
+			ImGui::Text("imGuiFileDialog Demo %s : ", IMGUIFILEDIALOG_VERSION);
 			ImGui::Indent();
 			{
 				static bool _UseWindowContraints = true;
@@ -242,7 +243,7 @@ int main(int, char**)
 
 				if (_UseWindowContraints)
 				{
-					maxSize = ImVec2(display_w, display_h);
+					maxSize = ImVec2((float)display_w, (float)display_h);
 					minSize = maxSize * 0.5f;
 				}
 
