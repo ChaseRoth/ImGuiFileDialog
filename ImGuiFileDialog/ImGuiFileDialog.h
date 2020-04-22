@@ -66,6 +66,7 @@ namespace igfd
 
 #ifdef IGFD_FILE_PROPERTIES
 		int fileSize = 0;
+		std::string formatedFileSize;
 		std::string fileModifDate;
 #endif
 	};

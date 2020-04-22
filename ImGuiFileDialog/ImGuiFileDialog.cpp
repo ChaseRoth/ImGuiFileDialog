@@ -26,6 +26,8 @@ SOFTWARE.
 #include "imgui.h"
 
 #ifdef IGFD_FILE_PROPERTIES
+#include <sstream>
+#include <iomanip>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -710,6 +712,7 @@ namespace igfd
 				{
 					searchTag = SearchBuffer;
 				}
+
 #ifndef IGFD_FILE_PROPERTIES
 				ImGui::BeginChild("##FileDialog_FileList", size);
 #endif
@@ -776,11 +779,14 @@ namespace igfd
 								SelectFileName(infos);
 							}
 						}
+
 #ifdef IGFD_FILE_PROPERTIES
 						ImGui::TableSetColumnIndex(1); // second column
 						if (infos.type != 'd')
 						{
-							ImGui::Text("%i", infos.fileSize);
+							//ImGui::Text("%i", infos.fileSize);
+							ImGui::Text("%s ", infos.formatedFileSize.c_str());
+
 						}
 						ImGui::TableSetColumnIndex(2); // third column
 						ImGui::Text("%s", infos.fileModifDate.c_str());
@@ -1213,6 +1219,34 @@ namespace igfd
 	}
 
 #ifdef IGFD_FILE_PROPERTIES
+	static std::string round_n(double vvalue, int n)
+	{
+		std::stringstream tmp;
+		tmp << std::setprecision(n) << std::fixed << vvalue;
+		return tmp.str();
+	}
+
+	static void FormatFileSize(size_t vByteSize, std::string *vFormat)
+	{
+		if (vFormat && vByteSize != 0)
+		{
+			static double lo = 1024;
+			static double ko = 1024 * 1024;
+			static double mo = 1024 * 1024 * 1024;
+
+			double v = (double)vByteSize;
+
+			if (vByteSize < lo) 
+				*vFormat = round_n(v, 0) + " o"; // octet
+			else if (vByteSize < ko) 
+				*vFormat = round_n(v / lo, 2) + " Ko"; // ko
+			else  if (vByteSize < mo) 
+				*vFormat = round_n(v / ko, 2) + " Mo"; // Mo 
+			else 
+				*vFormat = round_n(v / mo, 2) + " Go"; // Go 
+		}
+	}
+
 	void ImGuiFileDialog::FillInfos(FileInfoStruct *vFileInfoStruct)
 	{
 		if (vFileInfoStruct && vFileInfoStruct->fileName != "..")
@@ -1247,7 +1281,11 @@ namespace igfd
 			if (!result)
 			{
 				if (vFileInfoStruct->type != 'd')
+				{
 					vFileInfoStruct->fileSize = statInfos.st_size;
+					FormatFileSize(vFileInfoStruct->fileSize, 
+						&vFileInfoStruct->formatedFileSize);
+				}
 
 				size_t len = strftime(timebuf, 99, "%F", localtime(&statInfos.st_mtime));
 				if (len)
