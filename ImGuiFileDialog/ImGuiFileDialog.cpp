@@ -765,7 +765,7 @@ namespace igfd
 						ImGui::TableNextRow();
 						ImGui::TableSetColumnIndex(0); // first column
 #endif
-						if (ImGui::Selectable(str.c_str(), selected))
+						if (ImGui::Selectable(str.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
 						{
 							if (infos.type == 'd')
 							{
