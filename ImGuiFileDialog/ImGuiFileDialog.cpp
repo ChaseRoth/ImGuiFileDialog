@@ -230,16 +230,6 @@ namespace igfd
 		return res;
 	}
 
-	inline bool stringComparator(
-		const FileInfoStruct& a,
-		const FileInfoStruct& b)
-	{
-		bool res;
-		if (a.type != b.type) res = (a.type < b.type);
-		else res = (a.fileName < b.fileName);
-		return res;
-	}
-
 	struct PathStruct
 	{
 		std::string path;
@@ -722,10 +712,34 @@ namespace igfd
 					ImGuiTableFlags_NoHostExtendY | ImGuiTableFlags_ScrollFreezeTopRow;
 				if (ImGui::BeginTable("##fileTable", 3, flags, size))
 				{
-					ImGui::TableSetupColumn("File name", ImGuiTableColumnFlags_WidthStretch);
-					ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
-					ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthAlwaysAutoResize);
+					ImGui::TableSetupColumn("File name", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort);
+					ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_DefaultSort);
+					ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_DefaultSort);
+#if 0
 					ImGui::TableAutoHeaders();
+#else
+                    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+                    bool columnPressed[3] = {false,false,false};
+                    for (int column = 0; column < 3; column++)
+                    {
+                        ImGui::TableSetColumnIndex(column);
+                        const char* column_name = ImGui::TableGetColumnName(column); // Retrieve name passed to TableSetupColumn()
+                        ImGui::PushID(column);
+                        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+                        bool headerPressed = ImGui::TableHeader(column_name);
+                        ImGui::PopID();
+                        if (headerPressed)
+                        {
+                            if (column == 0)
+                                SortFields(SortingFieldEnum::FIELD_FILENAME);
+                            else if (column == 1)
+                                SortFields(SortingFieldEnum::FIELD_SIZE);
+                            else if (column == 2)
+                                SortFields(SortingFieldEnum::DIELD_DATE);
+                        }
+                    }
+#endif
+
 #endif
 				for (auto & it : m_FileList)
 				{
@@ -742,54 +756,58 @@ namespace igfd
 						show = false;
 					}
 					if (show)
-					{
-						ImVec4 c; std::string icon;
-						bool showColor = GetFilterInfos(infos.ext, &c, &icon);
-						if (showColor)
-							ImGui::PushStyleColor(ImGuiCol_Text, c);
+                    {
+                        ImVec4 c;
+                        std::string icon;
+                        bool showColor = GetFilterInfos(infos.ext, &c, &icon);
+                        if (showColor)
+                            ImGui::PushStyleColor(ImGuiCol_Text, c);
 
-						std::string str = " " + infos.fileName;
-						if (infos.type == 'd') str = dirEntryString + str;
-						if (infos.type == 'l') str = linkEntryString + str;
-						if (infos.type == 'f')
-						{
-							if (showColor && !icon.empty())
-								str = icon + str;
-							else
-								str = fileEntryString + str;
-						}
-						bool selected = false;
-						if (m_SelectedFileNames.find(infos.fileName) != m_SelectedFileNames.end()) // found
-							selected = true;
+                        std::string str = " " + infos.fileName;
+                        if (infos.type == 'd') str = dirEntryString + str;
+                        if (infos.type == 'l') str = linkEntryString + str;
+                        if (infos.type == 'f')
+                        {
+                            if (showColor && !icon.empty())
+                                str = icon + str;
+                            else
+                                str = fileEntryString + str;
+                        }
+                        bool selected = false;
+                        if (m_SelectedFileNames.find(infos.fileName) != m_SelectedFileNames.end()) // found
+                            selected = true;
 #ifdef IGFD_FILE_PROPERTIES
-						ImGui::TableNextRow();
-						ImGui::TableSetColumnIndex(0); // first column
+                        ImGui::TableNextRow();
+                        if (ImGui::TableSetColumnIndex(0)) // first column
+                        {
 #endif
-						if (ImGui::Selectable(str.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
-						{
-							if (infos.type == 'd')
-							{
-								pathClick = SelectDirectory(infos);
-								if (showColor)
-									ImGui::PopStyleColor();
-								break;
-							}
-							else
-							{
-								SelectFileName(infos);
-							}
-						}
-
+                            if (ImGui::Selectable(str.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
+                            {
+                                if (infos.type == 'd')
+                                {
+                                    pathClick = SelectDirectory(infos);
+                                    if (showColor)
+                                        ImGui::PopStyleColor();
+                                    break;
+                                }
+                                else
+                                {
+                                    SelectFileName(infos);
+                                }
+                            }
 #ifdef IGFD_FILE_PROPERTIES
-						ImGui::TableSetColumnIndex(1); // second column
-						if (infos.type != 'd')
-						{
-							//ImGui::Text("%i", infos.fileSize);
-							ImGui::Text("%s ", infos.formatedFileSize.c_str());
-
-						}
-						ImGui::TableSetColumnIndex(2); // third column
-						ImGui::Text("%s", infos.fileModifDate.c_str());
+                        }
+                        if (ImGui::TableSetColumnIndex(1)) // second column
+                        {
+                            if (infos.type != 'd')
+                            {
+                                ImGui::Text("%s ", infos.formatedFileSize.c_str());
+                            }
+                        }
+                        if (ImGui::TableSetColumnIndex(2)) // third column
+                        {
+                            ImGui::Text("%s", infos.fileModifDate.c_str());
+                        }
 #endif
 						if (showColor)
 							ImGui::PopStyleColor();
@@ -1218,7 +1236,37 @@ namespace igfd
 		ScanDir(m_CurrentPath);
 	}
 
+    static bool fileNameComparator(
+            const FileInfoStruct& a,
+            const FileInfoStruct& b)
+    {
+        bool res;
+        if (a.type != b.type) res = (a.type < b.type);
+        else res = (a.fileName < b.fileName);
+        return res;
+    }
+
 #ifdef IGFD_FILE_PROPERTIES
+    static bool sizeComparator(
+            const FileInfoStruct& a,
+            const FileInfoStruct& b)
+    {
+        bool res;
+        if (a.type != b.type) res = (a.type < b.type);
+        else res = (a.fileSize < b.fileSize);
+        return res;
+    }
+
+    static bool dateComparator(
+            const FileInfoStruct& a,
+            const FileInfoStruct& b)
+    {
+        bool res;
+        if (a.type != b.type) res = (a.type < b.type);
+        else res = (a.fileModifDate < b.fileModifDate);
+        return res;
+    }
+
 	static std::string round_n(double vvalue, int n)
 	{
 		std::stringstream tmp;
@@ -1262,9 +1310,9 @@ namespace igfd
 			//off_t     st_size;    /* total size, in bytes */
 			//blksize_t st_blksize; /* blocksize for file system I/O */
 			//blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
-			//time_t    st_atime;   /* time of last access */
-			//time_t    st_mtime;   /* time of last modification */
-			//time_t    st_ctime;   /* time of last status change */
+			//time_t    st_atime;   /* time of last access - not sure out of ntfs */
+			//time_t    st_mtime;   /* time of last modification - not sure out of ntfs */
+			//time_t    st_ctime;   /* time of last status change - not sure out of ntfs */
 
 			std::string fpn;
 
@@ -1287,7 +1335,7 @@ namespace igfd
 						&vFileInfoStruct->formatedFileSize);
 				}
 
-				size_t len = strftime(timebuf, 99, "%F", localtime(&statInfos.st_mtime));
+				size_t len = strftime(timebuf, 99, "%Y/%m/%d ", localtime(&statInfos.st_mtime));
 				if (len)
 				{
 					vFileInfoStruct->fileModifDate = std::string(timebuf, len);
@@ -1295,7 +1343,21 @@ namespace igfd
 			}
 		}
 	}
+
+    void ImGuiFileDialog::SortFields(SortingFieldEnum vSortingField)
+    {
+	    if (vSortingField != SortingFieldEnum::FIELD_NONE)
+	        m_SortingField = vSortingField;
+	    if (vSortingField == SortingFieldEnum::FIELD_FILENAME)
+            std::sort(m_FileList.begin(), m_FileList.end(), fileNameComparator);
+        if (vSortingField == SortingFieldEnum::FIELD_SIZE)
+            std::sort(m_FileList.begin(), m_FileList.end(), sizeComparator);
+        if (vSortingField == SortingFieldEnum::DIELD_DATE)
+            std::sort(m_FileList.begin(), m_FileList.end(), dateComparator);
+    }
 #endif
+
+
 
 	void ImGuiFileDialog::ScanDir(const std::string& vPath)
 	{
@@ -1305,13 +1367,13 @@ namespace igfd
 		std::string		path = vPath;
 
 #if defined(UNIX) // UNIX is LINUX or APPLE
-		if (path.size() > 0)
+		/*if (path.size() > 0)
 		{
 			if (path[0] != PATH_SEP)
 			{
 				//path = PATH_SEP + path;
 			}
-		}
+		}*/
 #endif
 
 		if (m_CurrentPath_Decomposition.empty())
@@ -1375,7 +1437,7 @@ namespace igfd
 				free(files);
 			}
 
-			std::sort(m_FileList.begin(), m_FileList.end(), stringComparator);
+            SortFields(m_SortingField);
 		}
 	}
 
