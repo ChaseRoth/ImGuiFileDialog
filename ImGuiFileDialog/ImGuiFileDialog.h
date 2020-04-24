@@ -73,7 +73,7 @@ namespace igfd
 		ImVec4 color = ImVec4(0, 0, 0, 0);
 
 		FilterInfosStruct() { color = ImVec4(0, 0, 0, 0); }
-		FilterInfosStruct(const ImVec4& vColor, const std::string& vIcon)
+		FilterInfosStruct(const ImVec4& vColor, const std::string& vIcon = std::string())
 		{
 			color = vColor;
 			icon = vIcon;

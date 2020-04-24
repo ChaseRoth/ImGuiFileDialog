@@ -1251,16 +1251,6 @@ namespace igfd
 		ScanDir(m_CurrentPath);
 	}
 
-    static bool fileNameComparator(
-            const FileInfoStruct& a,
-            const FileInfoStruct& b)
-    {
-        bool res;
-        if (a.type != b.type) res = (a.type < b.type);
-        else res = (a.fileName < b.fileName);
-        return res;
-    }
-
 	static std::string round_n(double vvalue, int n)
 	{
 		std::stringstream tmp;
@@ -1329,10 +1319,20 @@ namespace igfd
 						&vFileInfoStruct->formatedFileSize);
 				}
 
-				size_t len = strftime(timebuf, 99, "%Y/%m/%d ", localtime(&statInfos.st_mtime));
-				if (len)
+				
+#ifdef MSVC
+				struct tm *_tm = nullptr;
+				localtime_s(_tm, &statInfos.st_mtime);
+#else
+				struct tm *_tm = localtime(&statInfos.st_mtime);
+#endif
+				if (_tm)
 				{
-					vFileInfoStruct->fileModifDate = std::string(timebuf, len);
+					size_t len = strftime(timebuf, 99, "%Y/%m/%d ", _tm);
+					if (len)
+					{
+						vFileInfoStruct->fileModifDate = std::string(timebuf, len);
+					}
 				}
 			}
 		}
