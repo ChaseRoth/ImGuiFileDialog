@@ -25,7 +25,6 @@ SOFTWARE.
 #include "ImGuiFileDialog.h"
 #include "imgui.h"
 
-#ifdef IGFD_FILE_PROPERTIES
 #include <sstream>
 #include <iomanip>
 #include <time.h>
@@ -35,7 +34,6 @@ SOFTWARE.
 #include <errno.h>
 #ifdef WIN32
 #define stat _stat
-#endif
 #endif
 
 #ifdef WIN32
@@ -129,25 +127,13 @@ namespace igfd
 	#ifndef tableHeaderFileDateString
 	#define tableHeaderFileDateString "Date"
 	#endif
-	//#define tableHeaderAscendingIcon ICON_IMFDLG_CHEVRON_UP
-//#define tableHeaderDescendingIcon ICON_IMFDLG_CHEVRON_DOWN
-//#define tableHeaderFilenameString " File name"
-//#define tableHeaderSizeString " Size"
-//#define tableHeaderDateString " Date"
+
 	static std::string s_fs_root = std::string(1u, PATH_SEP);
 
-	/* Alphabetical sorting */
-	/*#ifdef WIN32
-	static int alphaSort(const void *a, const void *b)
-	{
-		return strcoll(((dirent*)a)->d_name, ((dirent*)b)->d_name);
-	}
-	#elif defined(LINUX) or defined(APPLE)*/
 	inline int alphaSort(const struct dirent **a, const struct dirent **b)
 	{
 		return strcoll((*a)->d_name, (*b)->d_name);
 	}
-	//#endif
 
 	inline bool replaceString(::std::string& str, const ::std::string& oldStr, const ::std::string& newStr)
 	{
@@ -722,10 +708,6 @@ namespace igfd
 					searchTag = SearchBuffer;
 				}
 
-#ifndef IGFD_FILE_PROPERTIES
-				ImGui::BeginChild("##FileDialog_FileList", size);
-#endif
-#ifdef IGFD_FILE_PROPERTIES
 				static ImGuiTableFlags flags = ImGuiTableFlags_SizingPolicyFixedX | ImGuiTableFlags_RowBg | 
 					ImGuiTableFlags_Hideable | ImGuiTableFlags_ScrollY | 
 					ImGuiTableFlags_NoHostExtendY | ImGuiTableFlags_ScrollFreezeTopRow 
@@ -776,8 +758,6 @@ namespace igfd
                         }
                     }
 	#endif
-
-#endif
 				for (auto & it : m_FileList)
 				{
 					const FileInfoStruct& infos = it;
@@ -813,11 +793,9 @@ namespace igfd
                         bool selected = false;
                         if (m_SelectedFileNames.find(infos.fileName) != m_SelectedFileNames.end()) // found
                             selected = true;
-#ifdef IGFD_FILE_PROPERTIES
                         ImGui::TableNextRow();
                         if (ImGui::TableSetColumnIndex(0)) // first column
                         {
-#endif
                             if (ImGui::Selectable(str.c_str(), selected, ImGuiSelectableFlags_SpanAllColumns))
                             {
                                 if (infos.type == 'd')
@@ -832,7 +810,6 @@ namespace igfd
                                     SelectFileName(infos);
                                 }
                             }
-#ifdef IGFD_FILE_PROPERTIES
                         }
                         if (ImGui::TableSetColumnIndex(1)) // second column
                         {
@@ -845,15 +822,13 @@ namespace igfd
                         {
                             ImGui::Text("%s", infos.fileModifDate.c_str());
                         }
-#endif
+
 						if (showColor)
 							ImGui::PopStyleColor();
 					}
 				}
-#ifdef IGFD_FILE_PROPERTIES
 					ImGui::EndTable();
 				}
-#endif
 
 				// changement de repertoire
 				if (pathClick)
@@ -865,9 +840,7 @@ namespace igfd
 				{
 					GetDrives();
 				}
-#ifndef IGFD_FILE_PROPERTIES
-				ImGui::EndChild();
-#endif
+
 				bool _CanWeContinue = true;
 
 				if (dlg_optionsPane)
@@ -1022,6 +995,11 @@ namespace igfd
 		}
 
 		return res;
+	}
+
+	void ImGuiFileDialog::SetFilterInfos(const std::string& vFilter, FilterInfosStruct vInfos)
+	{
+		m_FilterInfos[vFilter] = vInfos;
 	}
 
 	void ImGuiFileDialog::SetFilterInfos(const std::string& vFilter, ImVec4 vColor, std::string vIcon)
@@ -1283,27 +1261,6 @@ namespace igfd
         return res;
     }
 
-#ifdef IGFD_FILE_PROPERTIES
-    static bool sizeComparator(
-            const FileInfoStruct& a,
-            const FileInfoStruct& b)
-    {
-        bool res;
-        if (a.type != b.type) res = (a.type < b.type);
-        else res = (a.fileSize < b.fileSize);
-        return res;
-    }
-
-    static bool dateComparator(
-            const FileInfoStruct& a,
-            const FileInfoStruct& b)
-    {
-        bool res;
-        if (a.type != b.type) res = (a.type < b.type);
-        else res = (a.fileModifDate < b.fileModifDate);
-        return res;
-    }
-
 	static std::string round_n(double vvalue, int n)
 	{
 		std::stringstream tmp;
@@ -1486,7 +1443,6 @@ namespace igfd
 			m_SortingField = vSortingField;
 		}
     }
-#endif
 
 	void ImGuiFileDialog::ScanDir(const std::string& vPath)
 	{
@@ -1494,16 +1450,6 @@ namespace igfd
 		int             i = 0;
 		int             n = 0;
 		std::string		path = vPath;
-
-#if defined(UNIX) // UNIX is LINUX or APPLE
-		/*if (path.size() > 0)
-		{
-			if (path[0] != PATH_SEP)
-			{
-				//path = PATH_SEP + path;
-			}
-		}*/
-#endif
 
 		if (m_CurrentPath_Decomposition.empty())
 		{
@@ -1552,9 +1498,7 @@ namespace igfd
 							}
 						}
 
-#ifdef IGFD_FILE_PROPERTIES
 						FillInfos(&infos);
-#endif
 						m_FileList.push_back(infos);
 					}
 				}

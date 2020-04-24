@@ -49,8 +49,6 @@ SOFTWARE.
 #include CUSTOM_IMGUIFILEDIALOG_CONFIG
 #endif
 	
-#define IGFD_FILE_PROPERTIES
-
 namespace igfd
 {
 	#define MAX_FILE_DIALOG_NAME_BUFFER 1024
@@ -63,12 +61,10 @@ namespace igfd
 		std::string filePath;
 		std::string fileName;
 		std::string ext;
-
-#ifdef IGFD_FILE_PROPERTIES
-		size_t fileSize = 0;
+		size_t fileSize = 0; // for sorting operations
 		std::string formatedFileSize;
 		std::string fileModifDate;
-#endif
+
 	};
 
 	struct FilterInfosStruct
@@ -130,14 +126,13 @@ namespace igfd
 		size_t dlg_countSelectionMax = 1; // 0 for infinite
 		bool dlg_modal = false;
 
-#ifdef IGFD_FILE_PROPERTIES
 	private:
 		std::string m_HeaderFileName;
 		std::string m_HeaderFileSize;
 		std::string m_HeaderFileDate;
 		bool m_SortingDirection[3] = { true,true,true }; // true => Descending, false => Ascending
 		SortingFieldEnum m_SortingField = SortingFieldEnum::FIELD_FILENAME;
-#endif
+
 	public:
 		static ImGuiFileDialog* Instance()
 		{
@@ -194,24 +189,20 @@ namespace igfd
 		UserDatas GetUserDatas();
 		std::map<std::string, std::string> GetSelection(); // return map<FileName, FilePathName>
 
+		void SetFilterInfos(const std::string& vFilter, FilterInfosStruct vInfos);
 		void SetFilterInfos(const std::string& vFilter, ImVec4 vColor, std::string vIcon = "");
 		bool GetFilterInfos(const std::string& vFilter, ImVec4 *vColor, std::string *vIcon = 0);
 		void ClearFilterInfos();
 
 	private:
 		bool SelectDirectory(const FileInfoStruct& vInfos);
-
 		void SelectFileName(const FileInfoStruct& vInfos);
 		void RemoveFileNameInSelection(const std::string& vFileName);
 		void AddFileNameInSelection(const std::string& vFileName, bool vSetLastSelectionFileName);
-
 		void CheckFilter();
-
 		void SetPath(const std::string& vPath);
-#ifdef IGFD_FILE_PROPERTIES
 		void FillInfos(FileInfoStruct *vFileInfoStruct);
 		void SortFields(SortingFieldEnum vSortingField = SortingFieldEnum::FIELD_NONE, bool vCanChangeOrder = false);
-#endif
 		void ScanDir(const std::string& vPath);
 		void SetCurrentDir(const std::string& vPath);
 		bool CreateDir(const std::string& vPath);
