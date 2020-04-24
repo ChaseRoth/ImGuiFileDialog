@@ -114,7 +114,26 @@ namespace igfd
 	#ifndef buttonCreateDirString
 	#define buttonCreateDirString "Create Directory"
 	#endif
-
+	#ifndef tableHeaderAscendingIcon
+	#define tableHeaderAscendingIcon "A|"
+	#endif
+	#ifndef tableHeaderDescendingIcon
+	#define tableHeaderDescendingIcon "D|"
+	#endif
+	#ifndef tableHeaderFileNameString
+	#define tableHeaderFileNameString "File name"
+	#endif
+	#ifndef tableHeaderFileSizeString
+	#define tableHeaderFileSizeString "Size"
+	#endif
+	#ifndef tableHeaderFileDateString
+	#define tableHeaderFileDateString "Date"
+	#endif
+	//#define tableHeaderAscendingIcon ICON_IMFDLG_CHEVRON_UP
+//#define tableHeaderDescendingIcon ICON_IMFDLG_CHEVRON_DOWN
+//#define tableHeaderFilenameString " File name"
+//#define tableHeaderSizeString " Size"
+//#define tableHeaderDateString " Date"
 	static std::string s_fs_root = std::string(1u, PATH_SEP);
 
 	/* Alphabetical sorting */
@@ -709,36 +728,54 @@ namespace igfd
 #ifdef IGFD_FILE_PROPERTIES
 				static ImGuiTableFlags flags = ImGuiTableFlags_SizingPolicyFixedX | ImGuiTableFlags_RowBg | 
 					ImGuiTableFlags_Hideable | ImGuiTableFlags_ScrollY | 
-					ImGuiTableFlags_NoHostExtendY | ImGuiTableFlags_ScrollFreezeTopRow;
+					ImGuiTableFlags_NoHostExtendY | ImGuiTableFlags_ScrollFreezeTopRow 
+	#ifndef USE_CUSTOM_SORTING_ICON
+					| ImGuiTableFlags_Sortable
+	#endif
+					;
 				if (ImGui::BeginTable("##fileTable", 3, flags, size))
 				{
-					ImGui::TableSetupColumn("File name", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultSort);
-					ImGui::TableSetupColumn("Size", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_DefaultSort);
-					ImGui::TableSetupColumn("Date", ImGuiTableColumnFlags_WidthAlwaysAutoResize | ImGuiTableColumnFlags_DefaultSort);
-#if 0
+					ImGui::TableSetupColumn(m_HeaderFileName.c_str(), ImGuiTableColumnFlags_WidthStretch, -1, 0);
+					ImGui::TableSetupColumn(m_HeaderFileSize.c_str(), ImGuiTableColumnFlags_WidthAlwaysAutoResize, -1, 1);
+					ImGui::TableSetupColumn(m_HeaderFileDate.c_str(), ImGuiTableColumnFlags_WidthAlwaysAutoResize, -1, 2);
+
+	#ifndef USE_CUSTOM_SORTING_ICON
+					// Sort our data if sort specs have been changed!
+					if (const ImGuiTableSortSpecs* sorts_specs = ImGui::TableGetSortSpecs())
+					{
+						if (sorts_specs->SpecsChanged && !m_FileList.empty())
+						{
+							if (sorts_specs->Specs->ColumnUserID == 0)
+								SortFields(SortingFieldEnum::FIELD_FILENAME, true);
+							else if (sorts_specs->Specs->ColumnUserID == 1)
+								SortFields(SortingFieldEnum::FIELD_SIZE, true);
+							else if (sorts_specs->Specs->ColumnUserID == 2)
+								SortFields(SortingFieldEnum::FIELD_DATE, true);
+						}
+					}
+
 					ImGui::TableAutoHeaders();
-#else
-                    ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+	#else
+					ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
                     bool columnPressed[3] = {false,false,false};
                     for (int column = 0; column < 3; column++)
                     {
                         ImGui::TableSetColumnIndex(column);
                         const char* column_name = ImGui::TableGetColumnName(column); // Retrieve name passed to TableSetupColumn()
                         ImGui::PushID(column);
-                        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-                        bool headerPressed = ImGui::TableHeader(column_name);
+                        ImGui::TableHeader(column_name);
                         ImGui::PopID();
-                        if (headerPressed)
+                        if (ImGui::IsItemClicked())
                         {
                             if (column == 0)
-                                SortFields(SortingFieldEnum::FIELD_FILENAME);
+                                SortFields(SortingFieldEnum::FIELD_FILENAME, true);
                             else if (column == 1)
-                                SortFields(SortingFieldEnum::FIELD_SIZE);
+                                SortFields(SortingFieldEnum::FIELD_SIZE, true);
                             else if (column == 2)
-                                SortFields(SortingFieldEnum::DIELD_DATE);
+                                SortFields(SortingFieldEnum::FIELD_DATE, true);
                         }
                     }
-#endif
+	#endif
 
 #endif
 				for (auto & it : m_FileList)
@@ -1344,20 +1381,112 @@ namespace igfd
 		}
 	}
 
-    void ImGuiFileDialog::SortFields(SortingFieldEnum vSortingField)
+    void ImGuiFileDialog::SortFields(SortingFieldEnum vSortingField, bool vCanChangeOrder)
     {
-	    if (vSortingField != SortingFieldEnum::FIELD_NONE)
-	        m_SortingField = vSortingField;
-	    if (vSortingField == SortingFieldEnum::FIELD_FILENAME)
-            std::sort(m_FileList.begin(), m_FileList.end(), fileNameComparator);
-        if (vSortingField == SortingFieldEnum::FIELD_SIZE)
-            std::sort(m_FileList.begin(), m_FileList.end(), sizeComparator);
-        if (vSortingField == SortingFieldEnum::DIELD_DATE)
-            std::sort(m_FileList.begin(), m_FileList.end(), dateComparator);
+		if (vSortingField != SortingFieldEnum::FIELD_NONE)
+		{
+			m_HeaderFileName = tableHeaderFileNameString;
+			m_HeaderFileSize = tableHeaderFileSizeString;
+			m_HeaderFileDate = tableHeaderFileDateString;
+		}
+
+		if (vSortingField == SortingFieldEnum::FIELD_FILENAME)
+		{
+			if (vCanChangeOrder && m_SortingField == vSortingField)
+				m_SortingDirection[0] = !m_SortingDirection[0];
+
+			if (m_SortingDirection[0])
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileName = tableHeaderDescendingIcon tableHeaderFileNameString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type < b.type);
+					return (a.fileName < b.fileName); // else
+				});
+			}
+			else
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileName = tableHeaderAscendingIcon tableHeaderFileNameString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type > b.type);
+					return (a.fileName > b.fileName); // else
+				});
+			}
+		}
+		else if (vSortingField == SortingFieldEnum::FIELD_SIZE)
+		{
+			if (vCanChangeOrder && m_SortingField == vSortingField)
+				m_SortingDirection[1] = !m_SortingDirection[1];
+
+			if (m_SortingDirection[1])
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileSize = tableHeaderDescendingIcon tableHeaderFileSizeString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type < b.type);
+					return (a.fileSize < b.fileSize); // else
+				});
+			}
+			else
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileSize = tableHeaderAscendingIcon tableHeaderFileSizeString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type > b.type);
+					return (a.fileSize > b.fileSize); // else
+				});
+			}
+		}
+		else if (vSortingField == SortingFieldEnum::FIELD_DATE)
+		{
+			if (vCanChangeOrder && m_SortingField == vSortingField)
+				m_SortingDirection[2] = !m_SortingDirection[2];
+
+			if (m_SortingDirection[2])
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileDate = tableHeaderDescendingIcon tableHeaderFileDateString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type < b.type);
+					return (a.fileModifDate < b.fileModifDate); // else
+				});
+			}
+			else
+			{
+#ifdef USE_CUSTOM_SORTING_ICON
+				m_HeaderFileDate = tableHeaderAscendingIcon tableHeaderFileDateString;
+#endif
+				std::sort(m_FileList.begin(), m_FileList.end(),
+					[](const FileInfoStruct & a, const FileInfoStruct & b) -> bool
+				{
+					if (a.type != b.type) return (a.type > b.type);
+					return (a.fileModifDate > b.fileModifDate); // else
+				});
+			}
+		}
+		
+		if (vSortingField != SortingFieldEnum::FIELD_NONE)
+		{
+			m_SortingField = vSortingField;
+		}
     }
 #endif
-
-
 
 	void ImGuiFileDialog::ScanDir(const std::string& vPath)
 	{

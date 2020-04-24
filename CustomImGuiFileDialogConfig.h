@@ -24,6 +24,14 @@
 //#define buttonResetPathString "Reset to current directory"
 //#define buttonCreateDirString "Create Directory"
 
+// theses icons will appear in table headers
+//#define USE_CUSTOM_SORTING_ICON
+//#define AscendingIcon "A "
+//#define DescendingIcon "D "
+//#define tableHeaderFilenameString "File name"
+//#define tableHeaderSizeString "Size"
+//#define tableHeaderDateString "Date"
+
 /*
 Comment theses line if you not want to have customization, like icon font here
 */
@@ -40,6 +48,11 @@ Comment theses line if you not want to have customization, like icon font here
 #define linkEntryString ICON_IMFDLG_LINK
 #define fileEntryString ICON_IMFDLG_FILE
 
-
+#define USE_CUSTOM_SORTING_ICON
+#define tableHeaderAscendingIcon ICON_IMFDLG_CHEVRON_UP
+#define tableHeaderDescendingIcon ICON_IMFDLG_CHEVRON_DOWN
+#define tableHeaderFileNameString " File name"
+#define tableHeaderFileSizeString " Size"
+#define tableHeaderFileDateString " Date"
 
 

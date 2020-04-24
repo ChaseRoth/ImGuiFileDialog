@@ -89,7 +89,7 @@ namespace igfd
         FIELD_NONE=0,
 	    FIELD_FILENAME,
 	    FIELD_SIZE,
-	    DIELD_DATE
+		FIELD_DATE
     };
 
 	class ImGuiFileDialog
@@ -129,8 +129,14 @@ namespace igfd
 		UserDatas dlg_userDatas;
 		size_t dlg_countSelectionMax = 1; // 0 for infinite
 		bool dlg_modal = false;
+
 #ifdef IGFD_FILE_PROPERTIES
-        SortingFieldEnum m_SortingField = SortingFieldEnum::FIELD_FILENAME;
+	private:
+		std::string m_HeaderFileName;
+		std::string m_HeaderFileSize;
+		std::string m_HeaderFileDate;
+		bool m_SortingDirection[3] = { true,true,true }; // true => Descending, false => Ascending
+		SortingFieldEnum m_SortingField = SortingFieldEnum::FIELD_FILENAME;
 #endif
 	public:
 		static ImGuiFileDialog* Instance()
@@ -204,7 +210,7 @@ namespace igfd
 		void SetPath(const std::string& vPath);
 #ifdef IGFD_FILE_PROPERTIES
 		void FillInfos(FileInfoStruct *vFileInfoStruct);
-		void SortFields(SortingFieldEnum vSortingField = SortingFieldEnum::FIELD_NONE);
+		void SortFields(SortingFieldEnum vSortingField = SortingFieldEnum::FIELD_NONE, bool vCanChangeOrder = false);
 #endif
 		void ScanDir(const std::string& vPath);
 		void SetCurrentDir(const std::string& vPath);

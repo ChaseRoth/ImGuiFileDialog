@@ -24,4 +24,10 @@
 //#define buttonResetPathString "Reset to current directory"
 //#define buttonCreateDirString "Create Directory"
 
-
+// theses icons will appear in table headers
+//#define USE_CUSTOM_SORTING_ICON
+//#define AscendingIcon "A|"
+//#define DescendingIcon "D|"
+//#define tableHeaderFilenameString "File name"
+//#define tableHeaderSizeString "Size"
+//#define tableHeaderDateString "Date"
