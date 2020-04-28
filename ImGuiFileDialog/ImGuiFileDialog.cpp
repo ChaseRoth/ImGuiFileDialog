@@ -1319,20 +1319,18 @@ namespace igfd
 						&vFileInfoStruct->formatedFileSize);
 				}
 
-				
+				size_t len = 0;
 #ifdef MSVC
-				struct tm *_tm = nullptr;
-				localtime_s(_tm, &statInfos.st_mtime);
+				struct tm _tm;
+				errno_t err = localtime_s(&_tm, &statInfos.st_mtime);
+				if (!err) len = strftime(timebuf, 99, "%Y/%m/%d ", &_tm);
 #else
 				struct tm *_tm = localtime(&statInfos.st_mtime);
+				if (_tm) len = strftime(timebuf, 99, "%Y/%m/%d ", _tm);
 #endif
-				if (_tm)
+				if (len)
 				{
-					size_t len = strftime(timebuf, 99, "%Y/%m/%d ", _tm);
-					if (len)
-					{
-						vFileInfoStruct->fileModifDate = std::string(timebuf, len);
-					}
+					vFileInfoStruct->fileModifDate = std::string(timebuf, len);
 				}
 			}
 		}
