@@ -989,9 +989,9 @@ namespace igfd
 				result += PATH_SEP;
 			}
 
-			result += it.first;
+			result += it;
 
-			res[it.first] = result;
+			res[it] = result;
 		}
 
 		return res;
@@ -1204,7 +1204,7 @@ namespace igfd
 
 	void ImGuiFileDialog::AddFileNameInSelection(const std::string& vFileName, bool vSetLastSelectionFileName)
 	{
-		m_SelectedFileNames[vFileName];
+		m_SelectedFileNames.emplace(vFileName);
 
 		if (m_SelectedFileNames.size() == 1)
 		{

@@ -32,6 +32,7 @@ SOFTWARE.
 
 #include <vector>
 #include <string>
+#include <set>
 #include <map>
 
 #include <future>
@@ -93,8 +94,7 @@ namespace igfd
 	private:
 		std::vector<FileInfoStruct> m_FileList;
 		std::map<std::string, FilterInfosStruct> m_FilterInfos;
-		//std::string m_SelectedFileName;
-		std::map<std::string, bool> m_SelectedFileNames; // map for have binary search
+		std::set<std::string> m_SelectedFileNames;
 		std::string m_SelectedExt;
 		std::string m_CurrentPath;
 		std::vector<std::string> m_CurrentPath_Decomposition;
